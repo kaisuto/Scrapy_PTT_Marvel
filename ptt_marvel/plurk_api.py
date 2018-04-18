@@ -157,7 +157,7 @@ class Plurk(object):
 
 
 if __name__ == '__main__':
-    api_keys_path = '/home/kaisuto/pixiv_plurk_bot/plurk_api.keys'
+    api_keys_path = './plurk_api.keys'
 
     plurk = Plurk(api_keys_path)
     status = plurk.check_status()
@@ -169,10 +169,10 @@ if __name__ == '__main__':
         plurk.post_new('test post content', limited_to, {'porn': 1})
         exit()
 
-        s = '[R-18][Pixiv TOP][Rank 1][笹岡ぐんぐ/メロン様委託中！] 委託販売開始しました！（新刊）' \
-            'http://www.pixiv.net/member_illust.php?mode=medium&' \
-            'illust_id=52271653&ref=rn-b-1-title-3&uarea=male_r18 ' \
-            'http://i.imgur.com/vCehEQs.jpg'
+        s = 'test1' \
+            'test2' \
+            'test3' \
+            'test4'
         print(len(s))
         items = [s] * 3
         items.append('143243222243333324')
