@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pprint
+import json
 import logging
 import os.path
 import urllib
@@ -11,6 +12,8 @@ from scrapy.http import Request
 from ptt_marvel.items import Article
 
 
+DIR_PATH, _ = os.path.split(__file__)
+DIR_PATH, _ = os.path.split(DIR_PATH)
 LOGGER = logging.getLogger("MarvelSpider")
 
 
@@ -18,18 +21,36 @@ class MarvelSpider(scrapy.Spider):
     name = 'marvel'
     allowed_domains = ['www.ptt.cc']
     start_urls = ['https://www.ptt.cc/bbs/marvel/index.html']
+    data_path = os.path.join(DIR_PATH, 'marvel.dat')
     articles = []
+    data = None
     now_date = None
     last_date = None
+    period_days = 7
 
     def start_requests(self):
-        # load last date from file or sql db
+        # load last date from file
+
         self.now_date = arrow.now()
-        self.last_date = arrow.get(year=self.now_date.year,
-                                   month=self.now_date.month,
-                                   day=self.now_date.day)
-        self.last_date = self.last_date.shift(days=-3)
+        with open(self.data_path, 'a+') as fp:
+            try:
+                fp.seek(0)
+                self.data = json.load(fp)
+                self.data['last_date'] = arrow.get(self.data['last_date'])
+            except:
+                LOGGER.warning("Load Last Date Failed.")
+                last_date = self.now_date.shift(days=-self.period_days)
+                self.data = {
+                    'last_date': last_date
+                }
+            self.last_date = self.data['last_date']
         return [Request(url, dont_filter=True) for url in self.start_urls]
+    
+    def closed(self, reason):
+        with open(self.data_path, 'w+') as fp:
+                self.data['last_date'] = str(self.now_date)
+                json.dump(self.data, fp)
+        return
 
     def fileter_articles(self, articles):
         """Filter articles on page by date and score
@@ -116,9 +137,16 @@ class MarvelSpider(scrapy.Spider):
             articles = response.css("div.r-list-container > .r-ent")
 
         for article in articles:
+            # Skip deleted aritcles
+            if "本文已被刪除" in article.extract():
+                continue
             try:
                 article = self.get_preview_article(response, article)
-                if article['date'] >= self.last_date:
+            except Exception as e:
+                LOGGER.warning(article.extract())
+                LOGGER.warning("Article parsing failed.[%s]", str(e))
+            else:
+                if article['date'] > self.last_date:
                     meta_data = {'article': article}
                     request = Request(article['url'],
                                       self.parse_article,
@@ -126,8 +154,6 @@ class MarvelSpider(scrapy.Spider):
                     yield request
                 else:
                     over_date = True
-            except:
-                pass
 
         if over_date:
             return
