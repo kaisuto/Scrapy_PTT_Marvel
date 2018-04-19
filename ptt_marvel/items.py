@@ -21,3 +21,6 @@ class Article(scrapy.Item):
     def __repr__(self):
         """only print out attr1 after exiting the Pipeline"""
         return repr({'title': self['title']})
+    
+    def __str__(self):
+        return self['url']
