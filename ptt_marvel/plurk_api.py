@@ -146,6 +146,7 @@ class Plurk(object):
                 # logger.debug(post_content)
                 # logger.debug(limited_to)
                 r = self.post_new(post_content, limited_to, options)
+                print(r)
                 plurk_id = int(r['plurk_id'])
                 is_first_post = False
             else:
@@ -162,8 +163,6 @@ if __name__ == '__main__':
     plurk = Plurk(api_keys_path)
     status = plurk.check_status()
     if status:
-        ids = plurk.get_clique_ids('gentle')
-        print(ids)
         limited_to = [3344763]    # add self
 
         plurk.post_new('test post content', limited_to, {'porn': 1})
