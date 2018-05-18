@@ -60,13 +60,14 @@ class ArticlePipeline(object):
 
         # Check white keywords
         if any(keyword in item['title'] for keyword in white_keywords):
+            self.plurk_post_items.append(str(item))
             return item
 
         # Check scraped
         if spider.last_date >= item_date:
             raise DropItem("Scraped Article")
 
-        if item['score'] < 10:
+        if item['score'] < 0:
             raise DropItem("Low Score of Article")
         
         self.plurk_post_items.append(str(item))
