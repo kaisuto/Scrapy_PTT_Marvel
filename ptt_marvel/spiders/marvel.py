@@ -131,7 +131,7 @@ class MarvelSpider(scrapy.Spider):
     def parse_page(self, response):
         over_date = False
         # Article requests
-        articles = response.xpath('//div[contains(@class, "r-list-container")]//div[@class="r-list-sep"]/preceding-sibling::div')
+        articles = response.xpath('//div[contains(@class, "r-list-container")]//div[@class="r-list-sep"]/preceding-sibling::div[@class="r-ent"]')
         if not articles:
             # "r-list-sep" only show on first page
             articles = response.css("div.r-list-container > .r-ent")
@@ -172,6 +172,8 @@ class MarvelSpider(scrapy.Spider):
                           '//span[@class="article-meta-tag"][contains(text(), "時間")]'
                           '/following-sibling::span[@class="article-meta-value"]/text()')
         date_str = response.xpath(date_str_xpath)[0].extract()
+        # date_string normalize
+        date_str = ' '.join(date_str.split())
         article['date'] = arrow.get(date_str, 'ddd MMM D HH:mm:ss YYYY')
         article['content'] = response.xpath('//div[@id="main-content"]/text()')[0].extract()
         LOGGER.debug('detail parsing: %s', article['title'])
